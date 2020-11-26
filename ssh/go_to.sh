@@ -4,6 +4,15 @@ stty erase ^H
 
 ips=()
 
+function sshToIp(){
+    ip=$1
+
+    # get ip's hostname
+    myHostname=`ssh root@$ip 'hostname'`
+    echo -ne "\e]2;${myHostname}\a"
+    ssh -l root $ip
+}
+
 function searchKey(){
 
     ipFile="to.ip"
@@ -20,20 +29,19 @@ function searchKey(){
         read key   
     fi
 
+    # if searchKey is a ip, 
     if [[ "$key" =~ ^([0-9]{1,3}.){3}[0-9]{1,3}$ ]]; then
-        ssh -l root $key
+        sshToIp $key
         exit
     fi
 
-    echo ""    
-
+    echo ""
     i=0
 
     while read line
     do
         if [ -n "${line}" ];then    
 
-            #echo $line;
             if [[ $line == *$key* ]];then
             
                 ips[$i]=$line
@@ -57,64 +65,63 @@ function searchKey(){
     done < "${ipFile}";
 }
 
+function mainRun(){
+   
+    ipsLen=${#ips[@]}
+
+    if [[ $ipsLen == 1 ]];then
+        # only one result match
+        tmp=(${ips[0]})
+        ip=${tmp[0]}
+        clear
+
+        #call ssh
+        sshToIp $ip
+
+    elif [[ $ipsLen == 0 ]];then
+        # no result match, run mainRun again
+        echo "not found..."
+        echo ""
+        mainRun
+
+    else
+        ip=''
+        while [[ $ip == '' ]]
+        do
+            echo ""
+            echo -en "please enter ip's index or new search key: "
+            read index
+
+            # number, call searchKey
+            if [[ "$index" =~ ^[0-9]{1,3}$ ]];then
+                if [[ $index -ge $ipsLen ]];then
+                   searchKey $index
+                   mainRun
+                   
+                else     
+                    tmp=(${ips[$index]})
+                    ip=${tmp[0]}
+
+                    if [[ $ip == '' ]];then
+                        echo ""
+                        echo "incorrect index !!!!!!"
+                    else
+                        echo "going to '${ip}'..."
+                        clear
+
+                        #call ssh
+                        sshToIp $ip
+                    fi
+                fi
+            else
+                searchKey $index
+                mainRun
+            fi
+        done
+    fi
+}
+
 # call searchKey
 searchKey '###'
-
-ipsLen=${#ips[@]}
-
-if [[ $ipsLen == 1 ]];then
-    # one result match
-    tmp=(${ips[0]})
-    ip=${tmp[0]}
-    clear
-    #ssh -l root $ip
-    myHostname=`ssh root@$ip 'hostname'`
-    echo -ne "\e]2;${myHostname}\a"
-    ssh -l root $ip
-
-elif [[ $ipsLen == 0 ]];then
-    # no result match
-    echo "not found..."
-    echo ""
-    sh go_to.sh
-
-else
-
-    ip=''
-
-    while [[ $ip == '' ]]
-    do
-        echo ""
-        echo -en "please enter ip's index or new search key: "
-
-        read index
-
-        # number, call searchKey
-        if [[ "$index" =~ ^[0-9]{1,3}$ ]];then
-            if [[ $index -ge $ipsLen ]];then
-               searchKey $index
-            else     
-                tmp=(${ips[$index]})
-                ip=${tmp[0]}
-
-                if [[ $ip == '' ]];then
-                    echo ""
-                    echo "incorrect index !!!!!!"
-                else
-                    echo "going to '${ip}'..."
-                    clear
-
-                    #ssh -l root $ip
-
-                    myHostname=`ssh root@$ip 'hostname'`
-                    echo -ne "\e]2;${myHostname}\a"
-                    ssh -l root $ip
-                    
-                fi
-            fi
-        else
-            searchKey $index
-        fi
-
-    done
-fi
+# call mainRun
+mainRun
