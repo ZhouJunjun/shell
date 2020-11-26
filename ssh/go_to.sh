@@ -82,6 +82,7 @@ function mainRun(){
         # no result match, run mainRun again
         echo "not found..."
         echo ""
+        searchKey '###'
         mainRun
 
     else
