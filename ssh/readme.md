@@ -2,4 +2,4 @@
 2.执行脚本sh go_to.sh，输入文本即可搜索
 
 示例：
-![image](/example1.png)
+![image](/ssh/example1.png)
