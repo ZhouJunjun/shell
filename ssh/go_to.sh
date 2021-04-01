@@ -11,7 +11,7 @@ function sshToIp(){
     # get ip's hostname
     myHostname=`ssh root@$ip 'hostname'`
 
-    echo $key
+    #echo $key
     if [[ "$key" =~ ^[a-z\-]+$ ]];then
         echo -ne "\e]2;${key}_${ip}\a"
         ssh -l root $ip
