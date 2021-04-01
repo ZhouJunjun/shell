@@ -3,7 +3,7 @@
 stty erase ^H
 
 ips=()
-#key=""
+key=""
 
 function sshToIp(){
     ip=$1
@@ -11,13 +11,14 @@ function sshToIp(){
     # get ip's hostname
     myHostname=`ssh root@$ip 'hostname'`
 
-    #if [[ $key =~ ^[a-z\-]$ ]];then
-    #    echo -ne "\e]2;${key}-${myHostname}\a"
-    #    ssh -l root $ip
-    #else
-        echo -ne "\e]2;${myHostname}\a"
+    echo $key
+    if [[ "$key" =~ ^[a-z\-]+$ ]];then
+        echo -ne "\e]2;${key}_${ip}\a"
         ssh -l root $ip
-    #fi
+    else
+        echo -ne "\e]2;${ip}\a"
+        ssh -l root $ip
+    fi
 }
 
 function searchKey(){
