@@ -3,7 +3,7 @@
 stty erase ^H
 
 ips=()
-key=''
+key=""
 
 function sshToIp(){
     ip=$1
