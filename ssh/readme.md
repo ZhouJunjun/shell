@@ -7,4 +7,5 @@
 如果出现syntax error near unexpected token报错 ，用vi（:set ff=unix）将文件转成unix文本格式<br>
 <br>
 示例：<br>
-![image](/ssh/example1.png)
+
+![image-20220615094213353](https://raw.githubusercontent.com/ZhouJunjun/image/master/markdown/image-20220615094213353.png)
