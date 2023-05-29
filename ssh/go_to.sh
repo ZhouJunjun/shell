@@ -8,16 +8,38 @@ key=""
 function sshToIp(){
     ip=$1
 
-    # get ip's hostname
-    myHostname=`ssh root@$ip 'hostname'`
+    isItDev=`grep "${ip}" to.ip|grep -i itDev`
+    if [[ $isItDev == '' ]]; then
 
-    #echo $key
-    if [[ "$key" =~ ^[a-z\-]+$ ]];then
-        echo -ne "\e]2;${key}_${ip}\a"
-        ssh -l root $ip
+        isWrap=`ssh root@$ip 'grep -wo wrap /root/.bash_profile'`
+        if [[ $isWrap == '' ]]; then
+            # add: alias breakLine="sed 's/;/\n/g'"  to /root/.bash_profile
+            ssh root@$ip " echo \"alias wrap=\\\"sed 's/;/\\\\n/g'\\\" \" >>/root/.bash_profile" 
+        fi
+
+        # get ip's hostname
+        myHostname=`ssh root@$ip 'hostname'`
+
+        #echo $key
+        if [[ "$key" =~ ^[a-z\-]+$ ]];then
+            echo -ne "\e]2;${key}_${ip}\a"
+            ssh -l root $ip -o StrictHostKeyChecking=no
+        else
+            echo -ne "\e]2;${ip}\a"
+            ssh -l root $ip -o StrictHostKeyChecking=no
+        fi
     else
-        echo -ne "\e]2;${ip}\a"
-        ssh -l root $ip
+        # get ip's hostname
+        myHostname=`sshpass -p Qianjundevit ssh -l itdev $ip 'hostname'`
+        
+        #echo $key
+        if [[ "$key" =~ ^[a-z\-]+$ ]];then
+            echo -ne "\e]2;${key}_${ip}\a"
+            sshpass -p Qianjundevit ssh -o StrictHostKeyChecking=no -l itdev $ip
+        else
+            echo -ne "\e]2;${ip}\a"
+            sshpass -p Qianjundevit ssh -o StrictHostKeyChecking=no -l itdev $ip
+        fi
     fi
 }
 
@@ -61,9 +83,13 @@ function searchKey(){
                 fi       
                 
                 tmpIp=${tmp[0]}
-                tmpDetail=${tmp[1]}     
+                tmpDetail=${tmp[1]}  
+                highLightIp=${tmpIp//$key/\\033[42;37;1m$key\\033[0m} 
+                highLightDetail=${tmpDetail//$key/\\033[42;37;1m$key\\033[0m}
 
-                echo -e "${prefix}${i}  ${tmpIp//$key/\e[1m$key\e[0m}  ${tmpDetail//$key/\e[1m$key\e[0m}"
+                #echo -e "${prefix}${i}  ${tmpIp//$key/\e[1m$key\e[0m}  ${tmpDetail//$key/\e[1m$key\e[0m}"
+                #echo -e "${prefix}${i}  ${tmpIp//$key/\e[42;37;1m$key\e[0m}  ${tmpDetail//$key/\e[42;37;1m$key\e[0m}"
+                echo -e "${prefix}${i}  ${highLightIp}  ${highLightDetail}"
             
                 let i+=1
             fi
